@@ -40,10 +40,10 @@ jobs:
       - name: Rename APK
         run: |
           mkdir -p build-artifacts
-          cp app/build/outputs/apk/debug/app-debug.apk build-artifacts/Teff-Exclusivo-v14.apk
+          cp app/build/outputs/apk/debug/app-debug.apk build-artifacts/Teff-Exclusivo-v15.apk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Teff-Exclusivo-v14-apk
-          path: build-artifacts/Teff-Exclusivo-v14.apk
+          name: Teff-Exclusivo-v15-apk
+          path: build-artifacts/Teff-Exclusivo-v15.apk
