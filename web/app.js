@@ -1,5 +1,6 @@
 const SUPABASE_URL = 'https://xzkjgvdyfoertreyjdag.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh6a2pndmR5Zm9lcnRyZXlqZGFnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEwNTc1MTcsImV4cCI6MjEwNjYzMzUxN30.0Ohd3OEbQ7DC8_vBT3vXlONZc8-B3Jw9dOuqa9RnPD0';
+const ADMIN_LOGIN_EMAIL = 'teffbeauty767@gmail.com';
 
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const app = document.getElementById('app');
@@ -39,9 +40,7 @@ async function init() {
   registerServiceWorker();
   const { data } = await db.auth.getSession();
   state.session = data.session;
-  if (state.session) {
-    await refreshAll();
-  }
+  if (state.session) await refreshAll();
   state.loading = false;
   render();
 
@@ -71,7 +70,7 @@ async function refreshAll() {
 
 async function loadSettings() {
   const { data, error } = await db.from('app_settings').select('*').eq('id', true).maybeSingle();
-  if (error) throwToast(error.message);
+  if (error) showToast(error.message);
   state.settings = data || { store_name: 'Teff Exclusivo', pix_key: '', pix_holder: '', payment_due_day: 7 };
 }
 
@@ -79,13 +78,13 @@ async function loadProfile() {
   if (!state.session) return;
   const user = state.session.user;
   const { data, error } = await db.from('profiles').select('*').eq('id', user.id).maybeSingle();
-  if (error) throwToast(error.message);
+  if (error) showToast(error.message);
   state.profile = data || {
     id: user.id,
     role: 'cliente',
-    full_name: user.email || 'Cliente',
-    username: '',
-    whatsapp: '',
+    full_name: user.user_metadata?.full_name || user.email || 'Cliente',
+    username: user.user_metadata?.username || '',
+    whatsapp: user.user_metadata?.whatsapp || '',
     is_active: true
   };
 }
@@ -94,7 +93,7 @@ async function loadProducts() {
   let query = db.from('products').select('*').order('sort_order', { ascending: true }).order('name', { ascending: true });
   if (!isAdmin()) query = query.eq('is_active', true).eq('is_hidden', false);
   const { data, error } = await query;
-  if (error) throwToast(error.message);
+  if (error) showToast(error.message);
   state.products = data || [];
 }
 
@@ -106,10 +105,10 @@ async function loadMyOrders() {
     .eq('customer_id', state.session.user.id)
     .order('created_at', { ascending: false });
 
-  if (error) throwToast(error.message);
+  if (error) showToast(error.message);
   state.myOrders = orders || [];
-
   const ids = state.myOrders.map((order) => order.id);
+
   if (!ids.length) {
     state.myOrderItems = [];
     return;
@@ -121,7 +120,7 @@ async function loadMyOrders() {
     .in('order_id', ids)
     .order('created_at', { ascending: true });
 
-  if (itemsError) throwToast(itemsError.message);
+  if (itemsError) showToast(itemsError.message);
   state.myOrderItems = items || [];
 }
 
@@ -133,7 +132,7 @@ async function loadMyPayments() {
     .eq('customer_id', state.session.user.id)
     .order('created_at', { ascending: false });
 
-  if (error) throwToast(error.message);
+  if (error) showToast(error.message);
   state.myPayments = data || [];
 }
 
@@ -148,7 +147,7 @@ async function loadAdminData() {
   ]);
 
   for (const result of [profiles, orders, orderItems, payments, paymentOrders, products]) {
-    if (result.error) throwToast(result.error.message);
+    if (result.error) showToast(result.error.message);
   }
 
   state.adminProfiles = profiles.data || [];
@@ -173,7 +172,7 @@ function render() {
       <button class="icon-button" data-action="toggle-menu" aria-label="Abrir menu">☰</button>
       <div class="hello">
         <strong>Olá, ${escapeHtml(displayName())}</strong>
-        <span>${isAdmin() ? 'Painel e loja conectados ao Supabase.' : 'Que tal se cuidar um pouquinho hoje?'}</span>
+        <span>${isAdmin() ? 'Painel e loja conectados.' : 'Que tal se cuidar um pouquinho hoje?'}</span>
       </div>
       <button class="icon-button" data-action="nav" data-view="cart" aria-label="Abrir carrinho">⌑${cartCount() ? `<span class="badge-dot">${cartCount()}</span>` : ''}</button>
     </header>
@@ -209,8 +208,8 @@ function renderLoginForm() {
   return `
     <form class="form-grid" data-form="login">
       <div class="form-row">
-        <label>E-mail</label>
-        <input class="input" name="email" type="email" autocomplete="email" required>
+        <label>Usuário</label>
+        <input class="input" name="username" autocomplete="username" autocapitalize="none" required>
       </div>
       <div class="form-row">
         <label>Senha</label>
@@ -234,11 +233,7 @@ function renderSignupForm() {
       </div>
       <div class="form-row">
         <label>Nome de usuário</label>
-        <input class="input" name="username" autocomplete="username">
-      </div>
-      <div class="form-row">
-        <label>E-mail</label>
-        <input class="input" name="email" type="email" autocomplete="email" required>
+        <input class="input" name="username" autocomplete="username" autocapitalize="none" required>
       </div>
       <div class="form-row">
         <label>Senha</label>
@@ -337,20 +332,7 @@ function renderCart() {
       </div>
       ${state.cart.length ? `
         <div class="panel stack">
-          ${state.cart.map((item, index) => `
-            <div class="item-line">
-              <div>
-                <strong>${escapeHtml(item.name)}</strong>
-                <div class="meta">${formatMoney(item.price)} cada</div>
-              </div>
-              <div class="qty-mini">
-                <button data-action="cart-qty" data-index="${index}" data-delta="-1">−</button>
-                <input class="input" data-cart-index="${index}" type="number" min="1" value="${item.quantity}">
-                <button data-action="cart-qty" data-index="${index}" data-delta="1">+</button>
-              </div>
-              <button class="secondary" data-action="remove-cart" data-index="${index}">Remover</button>
-            </div>
-          `).join('')}
+          ${state.cart.map((item, index) => renderCartItem(item, index)).join('')}
           <div class="item-line"><strong>Total do carrinho</strong><strong>${formatMoney(total)}</strong></div>
           <button class="primary full" data-action="finalize-order">Finalizar pedido</button>
         </div>
@@ -363,6 +345,23 @@ function renderCart() {
         <div class="item-line"><span>Total pendente</span><strong>${formatMoney(debt)}</strong></div>
         <button class="success-btn full" data-action="open-pix" ${debt <= 0 ? 'disabled' : ''}>Pagar carrinho do mês</button>
       </div>
+    </div>
+  `;
+}
+
+function renderCartItem(item, index) {
+  return `
+    <div class="item-line">
+      <div>
+        <strong>${escapeHtml(item.name)}</strong>
+        <div class="meta">${formatMoney(item.price)} cada</div>
+      </div>
+      <div class="qty-mini">
+        <button data-action="cart-qty" data-index="${index}" data-delta="-1">−</button>
+        <input class="input" data-cart-index="${index}" type="number" min="1" value="${item.quantity}">
+        <button data-action="cart-qty" data-index="${index}" data-delta="1">+</button>
+      </div>
+      <button class="secondary" data-action="remove-cart" data-index="${index}">Remover</button>
     </div>
   `;
 }
@@ -399,7 +398,7 @@ function renderOrderCard(order, actionable) {
       <div class="order-top">
         <div>
           <div class="order-code">${escapeHtml(order.order_code || 'Pedido')}</div>
-          <div class="meta">${formatDate(order.created_at)} · ${items.map((item) => `${item.quantity}x ${item.product_name}`).join(', ')}</div>
+          <div class="meta">${formatDate(order.created_at)} · ${items.map((item) => `${item.quantity}x ${escapeHtml(item.product_name)}`).join(', ')}</div>
         </div>
         ${statusBadge(order.status, order.payment_status)}
       </div>
@@ -435,7 +434,7 @@ function renderProfile() {
         </div>
         <div class="form-row">
           <label>Nome de usuário</label>
-          <input class="input" name="username" value="${escapeAttr(profile.username || '')}">
+          <input class="input" name="username" value="${escapeAttr(profile.username || '')}" autocapitalize="none">
         </div>
         <button class="primary full" type="submit">Salvar alterações</button>
       </form>
@@ -558,19 +557,25 @@ function renderAdminClients() {
         ${filterButton('client-filter', 'ativos', 'Ativos', state.clientFilter)}
         ${filterButton('client-filter', 'ocultos', 'Ocultos', state.clientFilter)}
       </div>
-      ${profiles.length ? profiles.map((profile) => `
-        <article class="order-card">
-          <div class="order-top">
-            <div>
-              <div class="order-code">${escapeHtml(profile.full_name || profile.username || 'Cliente')}</div>
-              <div class="meta">${escapeHtml(profile.whatsapp || 'Sem WhatsApp')} · ${escapeHtml(profile.role)}</div>
-            </div>
-            ${profile.is_active ? '<span class="status ok">ATIVO</span>' : '<span class="status bad">OCULTO</span>'}
-          </div>
-          <button class="secondary" data-action="toggle-client" data-client-id="${profile.id}" ${profile.id === state.profile?.id ? 'disabled' : ''}>${profile.is_active ? 'Ocultar cliente' : 'Reativar cliente'}</button>
-        </article>
-      `).join('') : renderEmpty('Nenhum cliente nessa guia.')}
+      ${profiles.length ? profiles.map(renderAdminClientCard).join('') : renderEmpty('Nenhum cliente nessa guia.')}
     </div>
+  `;
+}
+
+function renderAdminClientCard(profile) {
+  return `
+    <article class="order-card">
+      <div class="order-top">
+        <div>
+          <div class="order-code">${escapeHtml(profile.full_name || profile.username || 'Cliente')}</div>
+          <div class="meta">@${escapeHtml(profile.username || 'sem-usuario')} · ${escapeHtml(profile.whatsapp || 'Sem WhatsApp')}</div>
+        </div>
+        ${profile.is_active ? '<span class="status ok">ATIVO</span>' : '<span class="status bad">OCULTO</span>'}
+      </div>
+      <div class="actions">
+        <button class="${profile.is_active ? 'danger-btn' : 'success-btn'}" data-action="toggle-client" data-client-id="${profile.id}">${profile.is_active ? 'Ocultar cliente' : 'Reativar cliente'}</button>
+      </div>
+    </article>
   `;
 }
 
@@ -585,11 +590,11 @@ function renderAdminOrders() {
             <div class="order-top">
               <div>
                 <div class="order-code">${escapeHtml(order.order_code || 'Pedido')}</div>
-                <div class="meta">${escapeHtml(customer?.full_name || 'Cliente')} · ${formatDate(order.created_at)}</div>
+                <div class="meta">${escapeHtml(customer?.full_name || customer?.username || 'Cliente')} · ${formatDate(order.created_at)}</div>
               </div>
               ${statusBadge(order.status, order.payment_status)}
             </div>
-            <div class="meta">${items.map((item) => `${item.quantity}x ${item.product_name}`).join(', ') || 'Sem itens'}</div>
+            <div class="meta">${items.map((item) => `${item.quantity}x ${escapeHtml(item.product_name)}`).join(', ') || 'Sem itens'}</div>
             <div class="item-line"><span>Total</span><strong>${formatMoney(order.total_amount)}</strong></div>
             <div class="item-line"><span>Custo salvo</span><strong>${formatMoney(order.cost_amount)}</strong></div>
             <div class="item-line"><span>Lucro histórico</span><strong>${formatMoney(order.profit_amount)}</strong></div>
@@ -609,7 +614,7 @@ function renderAdminPayments() {
           <article class="order-card">
             <div class="order-top">
               <div>
-                <div class="order-code">${escapeHtml(customer?.full_name || 'Cliente')}</div>
+                <div class="order-code">${escapeHtml(customer?.full_name || customer?.username || 'Cliente')}</div>
                 <div class="meta">${formatDate(payment.created_at)} · ${escapeHtml(payment.method)}</div>
               </div>
               ${payment.status === 'PAGO' ? '<span class="status ok">PAGO</span>' : '<span class="status">PENDENTE</span>'}
@@ -707,12 +712,11 @@ function renderEmpty(text) {
 }
 
 app.addEventListener('click', (event) => {
-  const modalCard = event.target.closest('[data-modal-card]');
   const actionTarget = event.target.closest('[data-action]');
   if (!actionTarget) return;
-  if (modalCard && actionTarget.dataset.action === 'close-modal' && event.target !== actionTarget) return;
-  const action = actionTarget.dataset.action;
-  handleAction(action, actionTarget);
+  const modalCard = event.target.closest('[data-modal-card]');
+  if (modalCard && actionTarget.classList.contains('modal-backdrop')) return;
+  handleAction(actionTarget.dataset.action, actionTarget);
 });
 
 app.addEventListener('submit', (event) => {
@@ -839,33 +843,62 @@ async function handleForm(type, form) {
 }
 
 async function login(data) {
-  const { error } = await db.auth.signInWithPassword({ email: data.email, password: data.password });
-  if (error) throw error;
+  const email = await emailForLogin(data.username);
+  const { error } = await db.auth.signInWithPassword({ email, password: data.password });
+  if (error) throw new Error('Usuário ou senha incorretos.');
   showToast('Login realizado.');
 }
 
 async function signup(data) {
+  const username = normalizeUsername(data.username);
+  if (username.length < 3) throw new Error('Escolha um usuário com pelo menos 3 caracteres.');
+
+  const email = usernameEmail(username);
   const { error } = await db.auth.signUp({
-    email: data.email,
+    email,
     password: data.password,
     options: {
       data: {
         full_name: data.full_name,
-        username: data.username,
+        username,
         whatsapp: data.whatsapp
       }
     }
   });
-  if (error) throw error;
-  showToast('Conta criada. Se pedir confirmação, verifique o e-mail antes de entrar.');
-  state.authMode = 'login';
-  render();
+
+  if (error) throw new Error('Não foi possível criar a conta. Verifique se o usuário já existe.');
+
+  const loginAttempt = await db.auth.signInWithPassword({ email, password: data.password });
+  if (loginAttempt.error) {
+    state.authMode = 'login';
+    render();
+    showToast('Conta criada. Se o Supabase pedir confirmação, desative confirmação por e-mail no painel.');
+    return;
+  }
+
+  showToast('Conta criada.');
+}
+
+async function emailForLogin(identifier) {
+  const clean = normalizeUsername(identifier);
+  if (!clean) throw new Error('Informe o usuário.');
+  if (String(identifier || '').indexOf('@') > -1) return String(identifier).trim().toLowerCase();
+  if (clean === 'admin') return ADMIN_LOGIN_EMAIL;
+
+  const { data, error } = await db.rpc('resolve_login_identifier', { p_identifier: clean });
+  if (!error && data) return data;
+  return usernameEmail(clean);
+}
+
+function usernameEmail(username) {
+  return `${normalizeUsername(username)}@clientes.teffexclusivo.app`;
 }
 
 async function saveProfile(data) {
+  const username = normalizeUsername(data.username);
   const { error } = await db.rpc('update_my_profile', {
     p_full_name: data.full_name,
-    p_username: data.username,
+    p_username: username,
     p_whatsapp: data.whatsapp
   });
   if (error) throw error;
@@ -1089,7 +1122,7 @@ function exportCyclePdf() {
     if (y > 760) { doc.addPage(); y = 48; }
     const customer = state.adminProfiles.find((profile) => profile.id === order.customer_id);
     const items = itemsForOrder(order.id, state.adminOrderItems).map((item) => `${item.quantity}x ${item.product_name}`).join(', ');
-    doc.text(`${order.order_code || 'Pedido'} - ${customer?.full_name || 'Cliente'} - ${formatMoney(order.total_amount)} - ${order.payment_status}`, 40, y);
+    doc.text(`${order.order_code || 'Pedido'} - ${customer?.full_name || customer?.username || 'Cliente'} - ${formatMoney(order.total_amount)} - ${order.payment_status}`, 40, y);
     y += 14;
     doc.setTextColor(110, 91, 86);
     doc.text(doc.splitTextToSize(items || 'Sem itens', 510), 52, y);
@@ -1106,7 +1139,7 @@ function exportCyclePdf() {
   for (const payment of payments) {
     if (y > 760) { doc.addPage(); y = 48; }
     const customer = state.adminProfiles.find((profile) => profile.id === payment.customer_id);
-    doc.text(`${customer?.full_name || 'Cliente'} - ${formatMoney(payment.amount)} - ${payment.status} - ${formatDate(payment.created_at)}`, 40, y);
+    doc.text(`${customer?.full_name || customer?.username || 'Cliente'} - ${formatMoney(payment.amount)} - ${payment.status} - ${formatDate(payment.created_at)}`, 40, y);
     y += 16;
   }
 
@@ -1166,7 +1199,7 @@ function isAdmin() {
 }
 
 function displayName() {
-  return state.profile?.full_name || state.profile?.username || state.session?.user?.email || 'Cliente';
+  return state.profile?.full_name || state.profile?.username || 'Cliente';
 }
 
 function statusBadge(status, paymentStatus) {
@@ -1194,6 +1227,15 @@ function clamp(value, min, max) {
   return Math.min(Math.max(Number(value) || min, min), max);
 }
 
+function normalizeUsername(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9._-]/g, '');
+}
+
 function loadCart() {
   try {
     return JSON.parse(localStorage.getItem('teff_exclusivo_cart') || '[]');
@@ -1208,11 +1250,11 @@ function saveCart() {
 
 function escapeHtml(value) {
   return String(value ?? '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;');
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 function escapeAttr(value) {
@@ -1224,8 +1266,4 @@ function showToast(message) {
   toastEl.classList.add('show');
   window.clearTimeout(showToast.timer);
   showToast.timer = window.setTimeout(() => toastEl.classList.remove('show'), 3600);
-}
-
-function throwToast(message) {
-  showToast(message);
 }
