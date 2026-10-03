@@ -12,9 +12,15 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
 public class MainActivity extends Activity {
     private static final String SITE_HOST = "cdn.jsdelivr.net";
-    private static final String START_URL = "https://cdn.jsdelivr.net/gh/victormatheusdemello64-cell/teff-beauty@8841b234f0a6eca8f5f07b621336ffaf69e3cbb3/web/index.html?v=16-supabase";
+    private static final String BASE_URL = "https://cdn.jsdelivr.net/gh/victormatheusdemello64-cell/teff-beauty@8841b234f0a6eca8f5f07b621336ffaf69e3cbb3/web/";
+    private static final String START_URL = BASE_URL + "index.html?v=17-webview-html";
 
     private WebView webView;
 
@@ -58,7 +64,52 @@ public class MainActivity extends Activity {
             }
         });
 
-        webView.loadUrl(START_URL);
+        loadHostedHtml();
+    }
+
+    private void loadHostedHtml() {
+        webView.loadDataWithBaseURL(
+            BASE_URL,
+            "<html><body style=\"font-family:sans-serif;padding:24px;color:#5b332d\"><h2>Teff Exclusivo</h2><p>Carregando loja...</p></body></html>",
+            "text/html",
+            "UTF-8",
+            null
+        );
+
+        new Thread(() -> {
+            HttpURLConnection connection = null;
+            try {
+                URL url = new URL(START_URL);
+                connection = (HttpURLConnection) url.openConnection();
+                connection.setUseCaches(false);
+                connection.setConnectTimeout(15000);
+                connection.setReadTimeout(15000);
+                connection.setRequestProperty("Cache-Control", "no-cache");
+                connection.setRequestProperty("Accept", "text/html");
+
+                StringBuilder html = new StringBuilder();
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        html.append(line).append('\n');
+                    }
+                }
+
+                runOnUiThread(() -> webView.loadDataWithBaseURL(BASE_URL, html.toString(), "text/html", "UTF-8", START_URL));
+            } catch (Exception exception) {
+                runOnUiThread(() -> webView.loadDataWithBaseURL(
+                    BASE_URL,
+                    "<html><body style=\"font-family:sans-serif;padding:24px;color:#5b332d\"><h2>Teff Exclusivo</h2><p>Nao foi possivel abrir a loja agora. Verifique a internet e tente novamente.</p></body></html>",
+                    "text/html",
+                    "UTF-8",
+                    null
+                ));
+            } finally {
+                if (connection != null) {
+                    connection.disconnect();
+                }
+            }
+        }).start();
     }
 
     @Override
