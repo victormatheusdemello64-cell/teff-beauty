@@ -14,7 +14,7 @@ import android.webkit.WebViewClient;
 
 public class MainActivity extends Activity {
     private static final String SITE_HOST = "teff-beauty.victormatheusdemello.chatgpt.site";
-    private static final String START_URL = "https://teff-beauty.victormatheusdemello.chatgpt.site/?v=12-conferencia-apk";
+    private static final String START_URL = "https://teff-beauty.victormatheusdemello.chatgpt.site/?v=14-publico";
 
     private WebView webView;
 
@@ -29,6 +29,8 @@ public class MainActivity extends Activity {
         CookieManager cookieManager = CookieManager.getInstance();
         cookieManager.setAcceptCookie(true);
         cookieManager.setAcceptThirdPartyCookies(webView, true);
+        cookieManager.removeAllCookies(null);
+        cookieManager.flush();
 
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
@@ -38,7 +40,10 @@ public class MainActivity extends Activity {
         settings.setUseWideViewPort(true);
         settings.setMediaPlaybackRequiresUserGesture(false);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
+        settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
 
+        webView.clearCache(true);
+        webView.clearHistory();
         webView.setWebChromeClient(new WebChromeClient());
         webView.setWebViewClient(new WebViewClient() {
             @Override
