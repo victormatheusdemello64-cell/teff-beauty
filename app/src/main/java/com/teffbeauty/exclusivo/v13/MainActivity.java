@@ -13,8 +13,8 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 public class MainActivity extends Activity {
-    private static final String SITE_HOST = "teff-beauty.victormatheusdemello.chatgpt.site";
-    private static final String START_URL = "https://teff-beauty.victormatheusdemello.chatgpt.site/?v=14-publico";
+    private static final String SITE_HOST = "victormatheusdemello64-cell.github.io";
+    private static final String START_URL = "https://victormatheusdemello64-cell.github.io/teff-beauty/?v=15-supabase";
 
     private WebView webView;
 
