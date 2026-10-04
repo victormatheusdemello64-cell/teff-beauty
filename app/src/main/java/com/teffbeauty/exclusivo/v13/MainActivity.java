@@ -19,8 +19,8 @@ import java.net.URL;
 
 public class MainActivity extends Activity {
     private static final String SITE_HOST = "cdn.jsdelivr.net";
-    private static final String BASE_URL = "https://cdn.jsdelivr.net/gh/victormatheusdemello64-cell/teff-beauty@8841b234f0a6eca8f5f07b621336ffaf69e3cbb3/web/";
-    private static final String START_URL = BASE_URL + "index.html?v=17-webview-html";
+    private static final String BASE_URL = "https://cdn.jsdelivr.net/gh/victormatheusdemello64-cell/teff-beauty@e9fda0a6595ecab1500fc2350f01c366be676c68/web/";
+    private static final String START_URL = BASE_URL + "index.html?v=18-usuario-teff";
 
     private WebView webView;
 
