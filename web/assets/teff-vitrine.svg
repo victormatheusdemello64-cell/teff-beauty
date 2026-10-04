@@ -1,80 +1,89 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-label="Vitrine Teff Beauty">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#f5cabe"/>
-      <stop offset="0.45" stop-color="#fff4ee"/>
-      <stop offset="1" stop-color="#e8aa9f"/>
+      <stop offset="0" stop-color="#f6cfc4"/>
+      <stop offset="0.48" stop-color="#fff5ef"/>
+      <stop offset="1" stop-color="#d9948a"/>
     </linearGradient>
-    <radialGradient id="glow" cx="54%" cy="44%" r="54%">
-      <stop offset="0" stop-color="#fffaf6"/>
-      <stop offset="0.58" stop-color="#fff1ea" stop-opacity="0.88"/>
+    <radialGradient id="halo" cx="50%" cy="40%" r="46%">
+      <stop offset="0" stop-color="#fffaf7"/>
+      <stop offset="0.62" stop-color="#fff2ec" stop-opacity="0.92"/>
       <stop offset="1" stop-color="#c5756c" stop-opacity="0"/>
     </radialGradient>
-    <linearGradient id="rose" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#f5c3bb"/>
-      <stop offset="1" stop-color="#9a514b"/>
+    <linearGradient id="wave" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#bf7168"/>
+      <stop offset="1" stop-color="#8f4943"/>
     </linearGradient>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
-      <feDropShadow dx="0" dy="22" stdDeviation="18" flood-color="#6b302d" flood-opacity="0.22"/>
+    <filter id="softShadow" x="-20%" y="-25%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="24" stdDeviation="20" flood-color="#6b302d" flood-opacity="0.20"/>
     </filter>
   </defs>
+
   <rect width="1600" height="900" fill="url(#bg)"/>
-  <circle cx="910" cy="405" r="370" fill="url(#glow)"/>
-  <path d="M0 756 C270 658 428 824 690 730 C942 640 1120 628 1600 738 L1600 900 L0 900 Z" fill="#fff7f1" opacity="0.86"/>
-  <path d="M0 808 C238 710 414 862 652 792 C900 720 1180 700 1600 790 L1600 900 L0 900 Z" fill="#cf877d" opacity="0.33"/>
-  <g opacity="0.35" stroke="#9f514a" stroke-width="11" stroke-linecap="round" fill="none">
-    <path d="M1398 154 C1444 78 1516 96 1494 170 C1478 224 1424 246 1398 288 C1368 238 1310 224 1306 168 C1301 90 1370 88 1398 154 Z"/>
-    <path d="M112 168 C154 94 224 116 204 184 C188 238 126 250 104 298 C76 246 14 224 20 164 C28 88 88 104 112 168 Z"/>
+  <circle cx="800" cy="340" r="380" fill="url(#halo)"/>
+  <path d="M0 710 C250 630 410 790 680 705 C910 633 1115 625 1600 700 L1600 900 L0 900 Z" fill="#fff7f2" opacity="0.94"/>
+  <path d="M0 792 C280 690 450 845 704 770 C966 692 1190 700 1600 774 L1600 900 L0 900 Z" fill="url(#wave)" opacity="0.27"/>
+
+  <g opacity="0.23" fill="#9f514a">
+    <path d="M88 76 C218 96 308 180 354 318 C218 292 122 206 88 76 Z"/>
+    <path d="M1368 92 C1484 110 1552 188 1576 314 C1460 284 1394 210 1368 92 Z"/>
+    <path d="M104 428 C224 420 310 486 362 594 C236 612 140 540 104 428 Z"/>
   </g>
-  <g opacity="0.2" fill="#9f514a">
-    <path d="M130 50 C250 68 312 146 346 252 C228 230 156 164 130 50 Z"/>
-    <path d="M1420 480 C1518 496 1568 558 1590 648 C1492 632 1436 574 1420 480 Z"/>
-    <path d="M76 430 C178 426 252 478 302 564 C196 578 114 526 76 430 Z"/>
+
+  <g opacity="0.43" stroke="#9b514b" stroke-width="10" stroke-linecap="round" fill="none">
+    <path d="M212 188 C252 118 322 134 302 204 C286 254 228 268 206 314 C176 266 120 250 126 192 C134 120 188 130 212 188 Z"/>
+    <path d="M1378 188 C1418 118 1488 134 1468 204 C1452 254 1394 268 1372 314 C1342 266 1286 250 1292 192 C1300 120 1354 130 1378 188 Z"/>
   </g>
-  <g transform="translate(92 570)" filter="url(#shadow)">
-    <rect x="0" y="130" width="182" height="154" rx="30" fill="#f7ddd6"/>
-    <rect x="44" y="42" width="18" height="136" rx="9" fill="#713832"/>
-    <ellipse cx="53" cy="34" rx="42" ry="28" fill="#4d2927"/>
-    <rect x="96" y="26" width="18" height="152" rx="9" fill="#b5665d"/>
-    <ellipse cx="105" cy="22" rx="36" ry="26" fill="#eec5bd"/>
-    <rect x="146" y="66" width="18" height="116" rx="9" fill="#8a453f"/>
-    <ellipse cx="155" cy="58" rx="34" ry="25" fill="#6e3632"/>
-    <path d="M48 174 C94 140 142 144 174 178" stroke="#a6534b" stroke-width="11" fill="none" stroke-linecap="round"/>
+
+  <g transform="translate(482 116)">
+    <text x="318" y="156" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="172" font-weight="700" fill="#743c36">TEFF</text>
+    <text x="318" y="254" text-anchor="middle" font-family="Arial, sans-serif" font-size="58" letter-spacing="34" fill="#743c36">BEAUTY</text>
+    <line x1="98" y1="326" x2="248" y2="326" stroke="#9b514b" stroke-width="5"/>
+    <text x="318" y="348" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="72" fill="#9b514b">♡</text>
+    <line x1="388" y1="326" x2="538" y2="326" stroke="#9b514b" stroke-width="5"/>
+    <text x="318" y="424" text-anchor="middle" font-family="Arial, sans-serif" font-size="46" letter-spacing="13" fill="#884943">BELEZA QUE</text>
+    <text x="318" y="486" text-anchor="middle" font-family="Arial, sans-serif" font-size="46" letter-spacing="13" fill="#884943">REALCA VOCE</text>
   </g>
-  <g transform="translate(342 642)" filter="url(#shadow)">
-    <rect x="0" y="94" width="92" height="86" rx="14" fill="#8b413a"/>
-    <rect x="22" y="0" width="48" height="104" rx="24" fill="#efafa6"/>
+
+  <g transform="translate(118 586)" filter="url(#softShadow)">
+    <rect x="0" y="130" width="190" height="154" rx="28" fill="#f7ddd6"/>
+    <rect x="42" y="40" width="20" height="140" rx="10" fill="#713832"/>
+    <ellipse cx="52" cy="34" rx="43" ry="28" fill="#4d2927"/>
+    <rect x="96" y="24" width="20" height="156" rx="10" fill="#b5665d"/>
+    <ellipse cx="106" cy="20" rx="37" ry="26" fill="#eec5bd"/>
+    <rect x="150" y="62" width="20" height="120" rx="10" fill="#8a453f"/>
+    <ellipse cx="160" cy="55" rx="34" ry="25" fill="#6e3632"/>
+    <path d="M48 176 C94 142 144 146 178 180" stroke="#a6534b" stroke-width="11" fill="none" stroke-linecap="round"/>
+  </g>
+
+  <g transform="translate(372 640)" filter="url(#softShadow)">
+    <rect x="0" y="94" width="92" height="88" rx="14" fill="#8b413a"/>
+    <rect x="22" y="0" width="48" height="106" rx="24" fill="#efafa6"/>
     <rect x="10" y="88" width="72" height="18" rx="9" fill="#d79a91"/>
-    <rect x="126" y="42" width="88" height="138" rx="20" fill="#f6d7cf"/>
-    <rect x="140" y="20" width="60" height="42" rx="10" fill="#8b413a"/>
+    <rect x="132" y="42" width="88" height="140" rx="20" fill="#f6d7cf"/>
+    <rect x="146" y="18" width="60" height="44" rx="10" fill="#8b413a"/>
   </g>
-  <g transform="translate(530 620)" filter="url(#shadow)">
-    <ellipse cx="128" cy="120" rx="128" ry="62" fill="#b96a61"/>
-    <ellipse cx="128" cy="102" rx="122" ry="54" fill="#f2c4b9"/>
-    <ellipse cx="128" cy="102" rx="82" ry="35" fill="#ffe4db"/>
-    <rect x="16" y="112" width="224" height="34" rx="17" fill="#a95750" opacity="0.64"/>
+
+  <g transform="translate(654 642)" filter="url(#softShadow)">
+    <ellipse cx="146" cy="120" rx="142" ry="64" fill="#b96a61"/>
+    <ellipse cx="146" cy="100" rx="132" ry="56" fill="#f2c4b9"/>
+    <ellipse cx="146" cy="100" rx="88" ry="36" fill="#ffe4db"/>
+    <rect x="30" y="112" width="232" height="35" rx="18" fill="#a95750" opacity="0.58"/>
   </g>
-  <g transform="translate(1010 150)">
-    <text x="0" y="142" font-family="Georgia, 'Times New Roman', serif" font-size="164" font-weight="700" fill="#7b3f39">TEFF</text>
-    <text x="42" y="232" font-family="Arial, sans-serif" font-size="58" letter-spacing="36" fill="#7b3f39">BEAUTY</text>
-    <line x1="48" y1="304" x2="206" y2="304" stroke="#9b514b" stroke-width="5"/>
-    <text x="246" y="324" font-family="Georgia, 'Times New Roman', serif" font-size="70" fill="#9b514b">♡</text>
-    <line x1="344" y1="304" x2="502" y2="304" stroke="#9b514b" stroke-width="5"/>
-    <text x="92" y="405" font-family="Arial, sans-serif" font-size="46" letter-spacing="14" fill="#8c4943">BELEZA QUE</text>
-    <text x="96" y="468" font-family="Arial, sans-serif" font-size="46" letter-spacing="14" fill="#8c4943">REALCA VOCE</text>
+
+  <g transform="translate(1048 616)" filter="url(#softShadow)">
+    <rect x="0" y="58" width="178" height="178" rx="22" fill="#f8ddd6"/>
+    <circle cx="88" cy="146" r="62" fill="#efbeb5"/>
+    <circle cx="88" cy="146" r="42" fill="#d68c83"/>
+    <rect x="26" y="32" width="126" height="42" rx="21" fill="#9b514b"/>
   </g>
-  <g transform="translate(934 675)" fill="none" stroke="#8b413a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M0 76 L0 20 C0 9 9 0 20 0 L82 0 C93 0 102 9 102 20 L102 76 Z"/>
-    <path d="M28 0 C28 -28 74 -28 74 0"/>
-    <path d="M42 38 L60 56 L86 28"/>
-  </g>
-  <g transform="translate(1115 664)" fill="#8b413a" font-family="Arial, sans-serif" font-size="28" letter-spacing="7">
-    <text x="0" y="40">QUALIDADE</text>
-    <text x="0" y="80">EM CADA</text>
-    <text x="0" y="120">DETALHE</text>
-  </g>
-  <g transform="translate(1310 676)" fill="none" stroke="#8b413a" stroke-width="7" stroke-linecap="round">
-    <path d="M14 118 C42 28 108 12 154 0 C142 72 94 126 14 118 Z"/>
-    <path d="M36 98 C72 74 106 42 146 6"/>
+
+  <g transform="translate(1284 614)" fill="none" stroke="#8b413a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity="0.9">
+    <path d="M0 80 L0 22 C0 10 10 0 22 0 L86 0 C98 0 108 10 108 22 L108 80 Z"/>
+    <path d="M30 0 C30 -30 78 -30 78 0"/>
+    <path d="M42 40 L62 60 L90 28"/>
+    <text x="138" y="32" font-family="Arial, sans-serif" font-size="29" letter-spacing="7" fill="#8b413a" stroke="none">QUALIDADE</text>
+    <text x="138" y="74" font-family="Arial, sans-serif" font-size="29" letter-spacing="7" fill="#8b413a" stroke="none">EM CADA</text>
+    <text x="138" y="116" font-family="Arial, sans-serif" font-size="29" letter-spacing="7" fill="#8b413a" stroke="none">DETALHE</text>
   </g>
 </svg>
