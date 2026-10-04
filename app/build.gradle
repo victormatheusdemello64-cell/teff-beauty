@@ -10,7 +10,22 @@ android {
         applicationId "com.teffbeauty.exclusivo.v13"
         minSdk 23
         targetSdk 35
-        versionCode 19
-        versionName "1.0.19"
+        versionCode 20
+        versionName "1.0.20"
     }
+
+    sourceSets {
+        main {
+            assets.srcDirs += ["$buildDir/generated/assets/teffWeb"]
+        }
+    }
+}
+
+tasks.register("syncTeffWebAssets", Copy) {
+    from("$rootDir/web")
+    into("$buildDir/generated/assets/teffWeb")
+}
+
+tasks.matching { it.name == "preBuild" }.configureEach {
+    dependsOn("syncTeffWebAssets")
 }
