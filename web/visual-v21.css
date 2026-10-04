@@ -1,0 +1,150 @@
+/* Visual patch for the test APK v21. Keeps system behavior from app.js intact. */
+.auth-page-v21 {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: #fff8f5;
+}
+
+.auth-page-v21 .auth-art {
+  min-height: min(38dvh, 340px);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-color: #f6d6cf;
+  border-right: 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.auth-panel-v21 {
+  flex: 1;
+  justify-content: start;
+  padding: 18px 24px 34px;
+  gap: 16px;
+}
+
+.auth-version-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.auth-version-row strong {
+  display: block;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(30px, 8vw, 42px);
+  line-height: 1;
+  color: var(--ink);
+}
+
+.mini-brand {
+  display: block;
+  color: var(--brand);
+  font-weight: 900;
+  letter-spacing: .08em;
+  font-size: .78rem;
+  margin-bottom: 4px;
+}
+
+.build-pill,
+.build-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, .9);
+  color: var(--muted);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 900;
+  padding: 5px 9px;
+  white-space: nowrap;
+}
+
+.build-chip {
+  position: fixed;
+  right: 10px;
+  bottom: max(10px, env(safe-area-inset-bottom));
+  z-index: 120;
+  opacity: .72;
+  pointer-events: none;
+}
+
+.auth-panel-v21 .auth-tabs {
+  margin-top: 2px;
+}
+
+.auth-panel-v21 .form-grid {
+  gap: 10px;
+}
+
+.auth-panel-v21 .input {
+  min-height: 50px;
+  font-size: 1rem;
+}
+
+.auth-panel-v21 .primary,
+.auth-panel-v21 .tab-button {
+  min-height: 50px;
+}
+
+.load-error {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: #fff8f5;
+}
+
+.load-error-card {
+  width: min(420px, 100%);
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+  color: var(--ink);
+}
+
+.load-error-card strong {
+  display: block;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 30px;
+  margin-bottom: 8px;
+}
+
+.load-error-card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+@media (min-width: 761px) {
+  .auth-page-v21 {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(360px, 500px);
+  }
+
+  .auth-page-v21 .auth-art {
+    min-height: 100dvh;
+    border-bottom: 0;
+    border-right: 1px solid var(--line);
+  }
+
+  .auth-panel-v21 {
+    justify-content: center;
+    padding: 42px;
+  }
+}
+
+@media (max-width: 390px) {
+  .auth-page-v21 .auth-art {
+    min-height: 260px;
+  }
+
+  .auth-panel-v21 {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+}
