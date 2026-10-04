@@ -8,7 +8,7 @@
 
 .auth-art {
   min-height: min(44dvh, 390px);
-  background-image: url("./assets/teff-vitrine.svg");
+  background-image: url("./assets/Imagem%20do%20ChatGPT%2027%20de%20set.%20de%202026%2C%2003_19_26.png");
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
@@ -66,6 +66,7 @@
 
 .vitrine {
   min-height: clamp(230px, 46vw, 430px);
+  background-image: url("./assets/Imagem%20do%20ChatGPT%2027%20de%20set.%20de%202026%2C%2003_19_26.png");
   background-size: cover;
   background-position: center;
 }
