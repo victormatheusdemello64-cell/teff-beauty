@@ -1,5 +1,5 @@
 (() => {
-  const PREVIEW_LABEL = 'preview-v22-web';
+  const PREVIEW_LABEL = 'preview-v23-vitrine-real';
 
   async function clearOldPreviewCache() {
     try {
@@ -19,7 +19,7 @@
   clearOldPreviewCache();
 
   if (typeof renderAuth === 'function') {
-    renderAuth = function renderAuthPreviewV22() {
+    renderAuth = function renderAuthPreviewV23() {
       const isLogin = state.authMode === 'login';
       return `
         <section class="auth-page" data-preview="${PREVIEW_LABEL}">
@@ -35,7 +35,6 @@
               <button class="tab-button ${!isLogin ? 'active' : ''}" data-action="auth-mode" data-mode="signup">Criar conta</button>
             </div>
             ${isLogin ? renderLoginForm() : renderSignupForm()}
-            <div class="diagnostic-note">Preview web sem APK: cache antigo limpo e service worker desligado para conferir visual antes de empacotar.</div>
           </div>
         </section>
       `;
