@@ -3,15 +3,15 @@ plugins {
 }
 
 android {
-    namespace "com.teffbeauty.exclusivo.v13"
+    namespace "com.teffbeauty.exclusivo.v27"
     compileSdk 35
 
     defaultConfig {
-        applicationId "com.teffbeauty.exclusivo.v21"
+        applicationId "com.teffbeauty.exclusivo.v27"
         minSdk 23
         targetSdk 35
-        versionCode 21
-        versionName "1.0.21"
+        versionCode 27
+        versionName "1.0.27"
     }
 
     sourceSets {
