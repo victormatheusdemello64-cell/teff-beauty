@@ -1,5 +1,5 @@
 (() => {
-  const PREVIEW_LABEL = 'preview-v25-login-direto';
+  const PREVIEW_LABEL = 'preview-v26-login-admin-visivel';
 
   async function clearOldPreviewCache() {
     try {
@@ -33,9 +33,22 @@
     return `TeffExclusivo#${clean || 'cliente'}#${raw || '000'}`;
   }
 
-  clearOldPreviewCache();
+  function forcePreviewRender() {
+    let tries = 0;
+    const timer = window.setInterval(() => {
+      tries += 1;
+      if (!state.loading && !state.session) {
+        render();
+        window.clearInterval(timer);
+      }
+      if (tries > 30) window.clearInterval(timer);
+    }, 100);
+  }
 
-  renderLoginForm = function renderLoginFormV25() {
+  clearOldPreviewCache();
+  window.__TEFF_PREVIEW_LABEL = PREVIEW_LABEL;
+
+  renderLoginForm = function renderLoginFormV26() {
     return `
       <form class="form-grid" data-form="login">
         <div class="form-row">
@@ -51,7 +64,7 @@
     `;
   };
 
-  renderSignupForm = function renderSignupFormV25() {
+  renderSignupForm = function renderSignupFormV26() {
     return `
       <form class="form-grid" data-form="signup">
         <div class="form-row">
@@ -75,7 +88,7 @@
     `;
   };
 
-  renderAuth = function renderAuthPreviewV25() {
+  renderAuth = function renderAuthPreviewV26() {
     const isLogin = state.authMode === 'login';
     return `
       <section class="auth-page" data-preview="${PREVIEW_LABEL}">
@@ -90,15 +103,15 @@
             <button class="tab-button ${isLogin ? 'active' : ''}" data-action="auth-mode" data-mode="login">Entrar</button>
             <button class="tab-button ${!isLogin ? 'active' : ''}" data-action="auth-mode" data-mode="signup">Criar conta</button>
           </div>
-          ${isLogin ? renderLoginForm() : renderSignupForm()}
           <button class="secondary full" type="button" data-action="admin-login-shortcut">Painel administrativo</button>
+          ${isLogin ? renderLoginForm() : renderSignupForm()}
         </div>
       </section>
     `;
   };
 
   const baseHandleAction = handleAction;
-  handleAction = async function handleActionV25(action, target) {
+  handleAction = async function handleActionV26(action, target) {
     if (action === 'admin-login-shortcut') {
       state.authMode = 'login';
       render();
@@ -113,19 +126,21 @@
     return baseHandleAction(action, target);
   };
 
-  login = async function loginV25(data) {
+  login = async function loginV26(data) {
     const username = normalizeUsername(data.username);
     const email = await emailForLogin(data.username);
-    const safePassword = passwordForAuth(data.username, data.password);
-    let attempt = await db.auth.signInWithPassword({ email, password: safePassword });
+    const rawPassword = String(data.password || '');
+    const safePassword = passwordForAuth(data.username, rawPassword);
+    const passwordAttempts = [...new Set([safePassword, rawPassword].filter(Boolean))];
+    let lastError = null;
 
-    if (attempt.error && safePassword !== data.password) {
-      attempt = await db.auth.signInWithPassword({ email, password: data.password });
-    }
-
-    if (!attempt.error) {
-      showToast('Login realizado.');
-      return;
+    for (const password of passwordAttempts) {
+      const attempt = await db.auth.signInWithPassword({ email, password });
+      if (!attempt.error) {
+        showToast('Login realizado.');
+        return;
+      }
+      lastError = attempt.error;
     }
 
     if (!username || String(data.username || '').includes('@') || username === 'admin') {
@@ -145,7 +160,7 @@
     });
 
     if (signupAttempt.error) {
-      throw new Error('Usuário ou senha incorretos.');
+      throw new Error('Não consegui entrar. Se esse usuário já existe, a senha salva no Supabase pode estar diferente.');
     }
 
     const secondAttempt = await db.auth.signInWithPassword({ email: usernameEmail(username), password: safePassword });
@@ -159,7 +174,7 @@
     showToast('Conta criada e login realizado.');
   };
 
-  signup = async function signupV25(data) {
+  signup = async function signupV26(data) {
     const username = normalizeUsername(data.username);
     if (username.length < 3) throw new Error('Escolha um usuário com pelo menos 3 caracteres.');
 
@@ -189,4 +204,6 @@
 
     showToast('Conta criada.');
   };
+
+  forcePreviewRender();
 })();
