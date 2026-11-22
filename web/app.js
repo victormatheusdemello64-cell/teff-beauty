@@ -25,6 +25,9 @@ const state = {
   qty: {},
   view: 'home',
   authMode: 'login',
+  authReturnView: 'home',
+  catalogLoading: true,
+  catalogError: '',
   menuOpen: false,
   modal: null,
   adminTab: 'products',
@@ -38,19 +41,49 @@ init();
 
 async function init() {
   registerServiceWorker();
-  const { data } = await db.auth.getSession();
-  state.session = data.session;
-  if (state.session) await refreshAll();
+  // The storefront is available before restoring an optional account session.
   state.loading = false;
   render();
-
-  db.auth.onAuthStateChange(async (_event, session) => {
+  const catalogReady = refreshAll().then(render).catch((error) => {
+    state.catalogLoading = false;
+    showToast(error.message || 'Não foi possível carregar a vitrine.');
+    render();
+  });
+  db.auth.onAuthStateChange((_event, session) => {
+    const wasSignedIn = Boolean(state.session);
     state.session = session;
     state.profile = null;
     state.cart = loadCart();
-    if (session) await refreshAll();
-    render();
+    if (!session) {
+      clearAccountData();
+      if (wasSignedIn || _event === 'SIGNED_OUT') {
+        state.view = 'home';
+        state.menuOpen = false;
+        state.modal = null;
+      }
+    } else if (state.view === 'auth') {
+      state.view = state.authReturnView || 'home';
+    }
+    // Supabase calls must run after the auth event releases its session lock.
+    window.setTimeout(async () => {
+      try { await catalogReady; await refreshAll(); }
+      catch (error) { showToast(error.message || 'Não foi possível atualizar a loja.'); }
+      render();
+    }, 0);
   });
+}
+
+function clearAccountData() {
+  state.profile = null;
+  for (const key of ['myOrders', 'myOrderItems', 'myPayments', 'adminProfiles', 'adminOrders', 'adminOrderItems', 'adminPayments', 'adminPaymentOrders']) state[key] = [];
+}
+
+function openAccount(returnView = 'home') {
+  state.authMode = 'login';
+  state.authReturnView = returnView;
+  state.view = 'auth';
+  state.menuOpen = false;
+  render();
 }
 
 function registerServiceWorker() {
@@ -60,6 +93,11 @@ function registerServiceWorker() {
 }
 
 async function refreshAll() {
+  if (!state.session) {
+    clearAccountData();
+    await Promise.all([loadSettings(), loadProducts()]);
+    return;
+  }
   await loadSettings();
   await loadProfile();
   await loadProducts();
@@ -68,9 +106,22 @@ async function refreshAll() {
   if (isAdmin()) await loadAdminData();
 }
 
+async function storefrontRequest(request) {
+  let timer;
+  try {
+    return await Promise.race([
+      request,
+      new Promise((_, reject) => { timer = window.setTimeout(() => reject(new Error('A conexão com a loja demorou para responder.')), 10000); })
+    ]);
+  } finally { window.clearTimeout(timer); }
+}
+
 async function loadSettings() {
-  const { data, error } = await db.from('app_settings').select('*').eq('id', true).maybeSingle();
-  if (error) showToast(error.message);
+  let data;
+  try {
+    const result = await storefrontRequest(db.from('app_settings').select('*').eq('id', true).maybeSingle());
+    data = result.data;
+  } catch (_error) { /* Use the store defaults while the service is unavailable. */ }
   state.settings = data || { store_name: 'Teff Exclusivo', pix_key: '', pix_holder: '', payment_due_day: 7 };
 }
 
@@ -90,11 +141,17 @@ async function loadProfile() {
 }
 
 async function loadProducts() {
+  state.catalogLoading = true;
+  state.catalogError = '';
   let query = db.from('products').select('*').order('sort_order', { ascending: true }).order('name', { ascending: true });
   if (!isAdmin()) query = query.eq('is_active', true).eq('is_hidden', false);
-  const { data, error } = await query;
-  if (error) showToast(error.message);
-  state.products = data || [];
+  try {
+    const { data, error } = await storefrontRequest(query);
+    if (error) throw error;
+    state.products = data || [];
+  } catch (_error) {
+    state.catalogError = 'Não foi possível carregar os produtos. Tente novamente em instantes.';
+  } finally { state.catalogLoading = false; }
 }
 
 async function loadMyOrders() {
@@ -160,7 +217,7 @@ async function loadAdminData() {
 
 function render() {
   if (state.loading) return;
-  if (!state.session) {
+  if (!state.session && state.view === 'auth') {
     app.className = '';
     app.innerHTML = renderAuth();
     return;
@@ -168,12 +225,13 @@ function render() {
 
   app.className = 'app-shell';
   app.innerHTML = `
-    <header class="topbar">
+    <header class="topbar ${!state.session ? 'storefront-topbar' : ''}">
       <button class="icon-button" data-action="toggle-menu" aria-label="Abrir menu">☰</button>
       <div class="hello">
-        <strong>Olá, ${escapeHtml(displayName())}</strong>
-        <span>${isAdmin() ? 'Painel e loja conectados.' : 'Que tal se cuidar um pouquinho hoje?'}</span>
+        <strong>${state.session ? `Olá, ${escapeHtml(displayName())}` : 'Teff Beauty'}</strong>
+        <span>${!state.session ? 'Beleza que realça você.' : isAdmin() ? 'Painel e loja conectados.' : 'Que tal se cuidar um pouquinho hoje?'}</span>
       </div>
+      ${!state.session ? '<button class="storefront-account" type="button" data-action="open-auth">Entrar</button>' : ''}
       <button class="icon-button" data-action="nav" data-view="cart" aria-label="Abrir carrinho">⌑${cartCount() ? `<span class="badge-dot">${cartCount()}</span>` : ''}</button>
     </header>
     ${state.menuOpen ? '<div class="sidebar-backdrop" data-action="close-menu"></div>' : ''}
@@ -255,12 +313,11 @@ function renderSidebar() {
       <nav class="nav-list">
         ${item('home', 'Início')}
         ${item('cart', 'Carrinho')}
-        ${item('orders', 'Pedidos')}
-        ${item('profile', 'Configurações')}
+        ${state.session ? item('orders', 'Pedidos') + item('profile', 'Configurações') : '<button class="nav-item" data-action="open-auth">Minha conta</button><button class="nav-item" data-action="open-auth" data-access="admin">Painel administrativo</button>'}
         ${isAdmin() ? item('admin', 'Administração') : ''}
       </nav>
       <div class="nav-spacer"></div>
-      <button class="nav-item danger" data-action="logout">Sair</button>
+      ${state.session ? '<button class="nav-item danger" data-action="logout">Sair</button>' : ''}
     </aside>
   `;
 }
@@ -291,7 +348,7 @@ function renderHome() {
           <p class="section-subtitle">Escolha a quantidade antes de adicionar ao carrinho.</p>
         </div>
       </div>
-      ${products.length ? `<div class="grid-products">${products.map(renderProductCard).join('')}</div>` : renderEmpty('Nenhum produto ativo na vitrine ainda.')}
+      ${state.catalogLoading ? renderEmpty('Preparando nossos produtos...') : state.catalogError ? `<div class="empty stack" role="status"><span>${escapeHtml(state.catalogError)}</span><button class="secondary" type="button" data-action="reload-catalog">Tentar novamente</button></div>` : products.length ? `<div class="grid-products">${products.map(renderProductCard).join('')}</div>` : renderEmpty('Nenhum produto ativo na vitrine ainda.')}
     </div>
   `;
 }
@@ -337,14 +394,14 @@ function renderCart() {
           <button class="primary full" data-action="finalize-order">Finalizar pedido</button>
         </div>
       ` : renderEmpty('Seu carrinho está vazio.')}
-      <div class="panel stack">
+      ${state.session ? `<div class="panel stack">
         <div>
           <h3 class="card-title">Pagamento do mês</h3>
           <p class="section-subtitle">Use esta opção para pagar todos os pedidos pendentes.</p>
         </div>
         <div class="item-line"><span>Total pendente</span><strong>${formatMoney(debt)}</strong></div>
         <button class="success-btn full" data-action="open-pix" ${debt <= 0 ? 'disabled' : ''}>Pagar carrinho do mês</button>
-      </div>
+      </div>` : ''}
     </div>
   `;
 }
@@ -747,6 +804,17 @@ app.addEventListener('input', (event) => {
 
 async function handleAction(action, target) {
   try {
+    if (action === 'reload-catalog') {
+      const request = loadProducts();
+      render();
+      await request;
+      render();
+      return;
+    }
+    if (action === 'open-auth') {
+      openAccount(state.view === 'auth' ? state.authReturnView : state.view);
+      return;
+    }
     if (action === 'auth-mode') {
       state.authMode = target.dataset.mode;
       render();
@@ -763,6 +831,10 @@ async function handleAction(action, target) {
       return;
     }
     if (action === 'nav') {
+      if (!state.session && ['orders', 'profile', 'admin'].includes(target.dataset.view)) {
+        openAccount(target.dataset.view);
+        return;
+      }
       state.view = target.dataset.view;
       state.menuOpen = false;
       if (state.view === 'admin' && isAdmin()) await loadAdminData();
@@ -999,6 +1071,11 @@ function removeFromCart(index) {
 
 async function finalizeOrder() {
   if (!state.cart.length) return;
+  if (!state.session) {
+    openAccount('cart');
+    showToast('Entre na sua conta para finalizar o pedido.');
+    return;
+  }
   const items = state.cart.map((item) => ({ product_id: item.product_id, quantity: item.quantity }));
   const { error } = await db.rpc('create_order_from_cart', { p_items: items, p_notes: '' });
   if (error) {

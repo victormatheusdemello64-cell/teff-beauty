@@ -1,5 +1,5 @@
 (() => {
-  const PATCH_LABEL = 'core-login-v29-visual';
+  const PATCH_LABEL = 'core-login-v30-storefront';
   const ADMIN_EMAIL = 'teffbeauty767@gmail.com';
   let accessMode = 'cliente';
 
@@ -162,6 +162,7 @@
             </div>
           </div>
           <div class="auth-panel">
+            <button class="auth-back-to-store" type="button" data-action="nav" data-view="home">${authIcon('bag')}Voltar para a loja</button>
             <header class="auth-heading">
               <span class="auth-welcome-mark">${authIcon('heart')}</span>
               <p class="auth-eyebrow">SEU ESPAÇO DE BELEZA</p>
@@ -188,6 +189,8 @@
   if (typeof handleAction === 'function') {
     const originalHandleAction = handleAction;
     handleAction = async function handleActionPatched(action, target) {
+      if (action === 'open-auth') accessMode = target.dataset.access === 'admin' ? 'admin' : 'cliente';
+      if (action === 'nav' && !state.session && ['orders', 'profile', 'admin'].includes(target.dataset.view)) accessMode = target.dataset.view === 'admin' ? 'admin' : 'cliente';
       if (action === 'admin-login-shortcut' || action === 'client-login-shortcut') {
         accessMode = action === 'admin-login-shortcut' ? 'admin' : 'cliente';
         state.authMode = 'login';
@@ -243,7 +246,7 @@
         state.profile = null;
         state.cart = loadCart();
         await refreshAll();
-        state.view = isAdmin() ? 'admin-dashboard' : 'home';
+        state.view = isAdmin() && accessMode === 'admin' ? 'admin' : state.authReturnView || 'home';
         render();
         notify('Login realizado.');
         return;
@@ -282,7 +285,7 @@
     state.profile = null;
     state.cart = loadCart();
     await refreshAll();
-    state.view = 'home';
+    state.view = state.authReturnView || 'home';
     render();
     notify('Conta criada e login realizado.');
   };
